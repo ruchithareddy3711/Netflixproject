@@ -1,0 +1,25 @@
+name: netflixproject
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: |
+          cd netflix1
+          dotnet restore
+
+      - name: Build
+        run: |
+          cd netflix1
+          dotnet build
