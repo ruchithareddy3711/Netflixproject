@@ -1,0 +1,60 @@
+name: dotnet-deploy
+on:
+  workflow_dispatch:
+jobs:
+  build:
+     runs-on: ubuntu-latest
+     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+        
+      - name: azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.GITHUBAZURE_CREDS}}
+
+      - name: terraform init
+        run:  |
+            cd terraform
+            terraform init
+
+      - name: terraform plan
+        run:  |
+            cd terraform
+            terraform plan
+
+      - name: terraform apply
+        run:  |
+            cd terraform
+            terraform apply -auto-approve
+
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: |
+          cd netflix1
+          dotnet restore
+
+      - name: Build
+        run: |
+          cd netflix1
+          dotnet build
+
+      - name: Publish
+        run: |
+          cd netflix1
+          dotnet publish -c Release -o ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'NFwebApp0711' # Replace with your Azure Web App name
+          package: ./netflix1/publish
